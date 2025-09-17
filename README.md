@@ -20,7 +20,7 @@ Run the scraper:
 python eos_jobs_scraper.py
 The script will: 1. Launch Chrome 2. Scrape all current job listings 3. Save data to eos_jobs.db 4. Append data to Google Sheets
 📂 Project Structure
-EOSJobScraper/ ├── eos_jobs_scraper.py   # main script ├── eos_jobs.db           # SQLite DB ├── gspread_creds.json    # Google credentials (local only) └── requirements.txt      # dependencies
+EOSJobScraper/ ├── eos_jobs_scraper.py # main script ├── eos_jobs.db # SQLite DB ├── gspread_creds.json # Google credentials (local only) └── requirements.txt # dependencies
 ⚠️ Troubleshooting
 Script fails → Check CHROMEDRIVER_PATH and GOOGLE_CREDS_FILE.
 DB not updating → Likely no new jobs; duplicates are blocked.
