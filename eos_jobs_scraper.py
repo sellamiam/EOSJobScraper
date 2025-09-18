@@ -18,7 +18,7 @@ URL = "https://eosenergystorage.wd1.myworkdayjobs.com/EoS"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 GOOGLE_CREDS_FILE = "/Users/msellamia/Scripts/cred/gspread_creds.json"
-SHEET_NAME = "EOS_Jobs"
+SHEET_NAME = "eos_jobs"
 DB_FILE = os.path.join(SCRIPT_DIR, "eos_jobs.db")
 CHROMEDRIVER_PATH = "/Users/msellamia/Downloads/chromedriver-mac-arm64/chromedriver"
 

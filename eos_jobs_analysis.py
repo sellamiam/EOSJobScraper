@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 # Load CSV
-df = pd.read_csv('/Users/msellamia/Downloads/EOS_Jobs.csv')
+df = pd.read_csv('/Users/msellamia/Scripts/EOSJobScraper/eos_jobs.csv')
 
 # --- Data cleaning ---
 def categorize_location(loc):
