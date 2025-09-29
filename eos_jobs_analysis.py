@@ -124,6 +124,8 @@ try:
         SELECT title, location, date(scrape_date) as job_post_date
         FROM jobs
         WHERE DATE(scrape_date) > DATE('now', '-7 day')
+          AND title IS NOT NULL 
+          AND title != ''
     ''')
     recent_jobs = c.fetchall()
     conn.close()
