@@ -99,104 +99,33 @@ def main(args: argparse.Namespace) -> int:
 
     # --- Plotting Setup ---
     plt.style.use('default')
-    fig, axes = plt.subplots(2, 3, figsize=(26, 10))
-    pie_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#8c564b', '#d62728', '#9467bd', '#7f7f7f'][:max(1, len(location_counts))]
+    fig, ax = plt.subplots(figsize=(20, 12))  # Single large plot
     bar_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 
-    # 1. Overall Job Types
-    axes[0, 0].bar(job_category_counts.index, job_category_counts.values, color=bar_colors[:len(job_category_counts)])
-    axes[0, 0].set_title('Overall Job Type Distribution', fontweight='bold', fontsize=12)
-    axes[0, 0].set_ylabel('Number of Positions', fontweight='bold', fontsize=11)
-    axes[0, 0].tick_params(axis='x', rotation=30, labelsize=10)
-
-    # 2. Geographic Distribution by Category
-    axes[0, 1].bar(location_counts.index, location_counts.values, color=pie_colors[:len(location_counts)])
-    axes[0, 1].set_title('Job Postings by Location Category', fontweight='bold', fontsize=12)
-    axes[0, 1].set_ylabel('Number of Positions', fontweight='bold', fontsize=11)
-    axes[0, 1].tick_params(axis='x', rotation=30, labelsize=10)
-
-    # 3. Pie chart for locations
-    axes[0, 2].pie(location_counts.values, labels=location_counts.index, colors=pie_colors[:len(location_counts)], autopct='%1.1f%%', startangle=90, textprops={'fontsize': 10})
-    axes[0, 2].set_title('Geographic Distribution (%)', fontweight='bold', fontsize=12)
-
-    # 4. Top Specific Locations
-    axes[1, 0].bar(top_locations.index, top_locations.values, color=bar_colors[:len(top_locations)])
-    axes[1, 0].set_title('Top 6 Specific Locations', fontweight='bold', fontsize=12)
-    axes[1, 0].set_ylabel('Number of Positions', fontweight='bold', fontsize=11)
-    axes[1, 0].tick_params(axis='x', rotation=30, labelsize=10)
-
-    # 5. Job postings by day & category (UPDATED to include overall)
+    # 5. Job postings by day (Scrape Date based)
     if 'Scrape Date' in df.columns:
-        df['Scrape_Day'] = pd.to_datetime(df['Scrape Date'], errors='coerce').dt.strftime('%Y-%m-%d')
+        df['Scrape_Datetime'] = pd.to_datetime(df['Scrape Date'], errors='coerce')
+        df['Scrape_Day'] = df['Scrape_Datetime'].dt.strftime('%Y-%m-%d')
         df = df.dropna(subset=['Scrape_Day'])
 
-        jobs_by_day_category = df.groupby(['Scrape_Day', 'Job_Category']).size().unstack(fill_value=0)
-
-        # Plot each job category as a separate line
-        for i, column in enumerate(jobs_by_day_category.columns):
-            axes[1, 1].plot(jobs_by_day_category.index, jobs_by_day_category[column],
-                             marker='o', label=column, linewidth=2, color=bar_colors[i % len(bar_colors)])
-
         # Calculate and plot the overall total line
-        jobs_by_day_total = df.groupby('Scrape_Day').size()
-        axes[1, 1].plot(jobs_by_day_total.index, jobs_by_day_total.values,
-                         marker='o', label='Overall Total', linewidth=4, color='black', linestyle='--')
+        jobs_by_day_total = df.groupby('Scrape_Day').size().sort_index()
+        ax.plot(jobs_by_day_total.index, jobs_by_day_total.values,
+                 marker='o', label='Total Postings', linewidth=5, color='#1f77b4')
 
-        axes[1, 1].set_title('Number of Job Postings by Day & Category', fontweight='bold', fontsize=12)
-        axes[1, 1].set_ylabel('Number of Postings', fontweight='bold', fontsize=11)
-        axes[1, 1].set_xlabel('Date', fontweight='bold', fontsize=11)
-        axes[1, 1].tick_params(axis='x', rotation=30, labelsize=10)
-        axes[1, 1].legend(title='Job Category', fontsize=9, bbox_to_anchor=(1.05, 1), loc='upper left')
+        ax.set_title('Number of Job Postings by Scrape Date', fontweight='bold', fontsize=20, pad=20)
+        ax.set_ylabel('Number of Postings', fontweight='bold', fontsize=16)
+        ax.set_xlabel('Date (Scraped)', fontweight='bold', fontsize=16)
+        ax.tick_params(axis='x', rotation=45, labelsize=12)
+        ax.tick_params(axis='y', labelsize=12)
+        ax.grid(True, linestyle='--', alpha=0.7)
     else:
-        axes[1, 1].axis('off')
+        ax.text(0.5, 0.5, 'Scrape Date column missing', ha='center', va='center', fontsize=20)
+        ax.axis('off')
 
-    # 6. Recent jobs table (last 7 days)
-    try:
-        if db_file_path.exists():
-            with sqlite3.connect(str(db_file_path)) as conn:
-                c = conn.cursor()
-                c.execute('''
-                    SELECT title, location, date(scrape_date) as job_post_date
-                    FROM jobs
-                    WHERE DATE(scrape_date) > DATE('now', '-7 day')
-                      AND title IS NOT NULL
-                      AND title != ''
-                ''')
-                recent_jobs = c.fetchall()
-        else:
-            logger.warning('Database file not found: %s. Skipping recent jobs table.', db_file_path)
-            recent_jobs = []
-
-        if recent_jobs:
-            table_data = recent_jobs[:15]
-            col_labels = ['Title', 'Location', 'Job Post Date']
-            axes[1, 2].axis('off')
-
-            table = axes[1, 2].table(cellText=table_data, colLabels=col_labels,
-                                    loc='center', cellLoc='left', colLoc='left')
-
-            table.auto_set_font_size(False)
-            table.set_fontsize(11)
-            table.scale(1, 1.5)
-            for i, width in enumerate([0.65, 0.25, 0.25]):
-                for key, cell in table.get_celld().items():
-                    if key[1] == i:
-                        cell.set_width(width)
-
-            axes[1, 2].set_title('Recent Job Postings (Last 7 Days, sample 15)',
-                                fontweight='bold', fontsize=12, pad=40)
-        else:
-            axes[1, 2].text(0.5, 0.5, 'No recent job postings', ha='center', va='center', fontsize=14)
-            axes[1, 2].axis('off')
-
-    except sqlite3.OperationalError:
-        logger.exception('Error querying the DB: %s', db_file_path)
-        axes[1, 2].text(0.5, 0.5, 'DB Error: No recent postings table', ha='center', va='center', fontsize=12, color='red')
-        axes[1, 2].axis('off')
 
     # Adjust overall figure margins
-    plt.tight_layout(h_pad=3, w_pad=2)
-    plt.subplots_adjust(top=0.92)
+    plt.tight_layout()
 
     # --- Save figure ---
     try:

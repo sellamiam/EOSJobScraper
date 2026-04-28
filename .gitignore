@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environments
+.venv
+env/
+venv/
+ENV/
+
+# Local databases
+*.db
+
+# CSV files (optional, but keep samples)
+test_db.csv
+# eos_jobs.csv
+
+# Credentials
+gspread_creds.json
+
+# Selenium
+chromedriver
